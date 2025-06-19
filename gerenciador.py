@@ -1,15 +1,14 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 import json
-from localizacao import traduzir
 
 class GerenciadorRecursos:
-    def __init__(self, root, idioma='pt'):
+    def __init__(self, root):
         self.root = root
-        self.idioma = idioma
         self.recursos = []
         self.modo_escuro = False
         
+        # Configurações padrão
         self.resolucoes = {
             '800x600': (800, 600),
             '1024x768': (1024, 768),
@@ -17,21 +16,28 @@ class GerenciadorRecursos:
             '1920x1080': (1920, 1080)
         }
         
+        # Variável para armazenar o item do menu de modo escuro
         self.modo_escuro_menu_item = None
         
+        # Configurar interface primeiro
         self.configurar_interface()
         
+        # Depois criar menu
         self.criar_menu()
         
+        # Por último aplicar tema
         self.aplicar_tema()
         
+        # Definir resolução inicial
         self.alterar_resolucao(self.resolucoes['1024x768'])
 
     def criar_menu(self):
         menubar = tk.Menu(self.root)
         
+        # Menu de Configurações
         config_menu = tk.Menu(menubar, tearoff=0)
         
+        # Submenu de Resolução
         resolucao_menu = tk.Menu(config_menu, tearoff=0)
         for texto, resolucao in self.resolucoes.items():
             resolucao_menu.add_command(
@@ -41,6 +47,7 @@ class GerenciadorRecursos:
         
         config_menu.add_cascade(label="Resolução", menu=resolucao_menu)
         
+        # Adicionar item do modo escuro
         self.modo_escuro_menu_item = tk.BooleanVar(value=self.modo_escuro)
         config_menu.add_checkbutton(
             label="Modo Escuro", 
@@ -56,31 +63,33 @@ class GerenciadorRecursos:
         self.root.config(menu=menubar)
 
     def configurar_interface(self):
+        # Frame principal para melhor organização
         self.main_frame = ttk.Frame(self.root, padding="10")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
         self.label_recurso = ttk.Label(
             self.main_frame, 
-            text=traduzir(self.idioma, 'recurso')
+            text="Recurso:"
         )
         self.label_recurso.pack(pady=5)
         
         self.entrada_recurso = ttk.Entry(self.main_frame)
         self.entrada_recurso.pack(fill=tk.X, pady=5)
         
+        # Frame para os botões
         botoes_frame = ttk.Frame(self.main_frame)
         botoes_frame.pack(fill=tk.X, pady=5)
         
         self.botao_adicionar = ttk.Button(
             botoes_frame, 
-            text=traduzir(self.idioma, 'adicionar'), 
+            text="Adicionar", 
             command=self.adicionar_recurso
         )
         self.botao_adicionar.pack(side=tk.LEFT, padx=5, expand=True, fill=tk.X)
         
         self.botao_remover = ttk.Button(
             botoes_frame, 
-            text=traduzir(self.idioma, 'remover'), 
+            text="Remover", 
             command=self.remover_recurso
         )
         self.botao_remover.pack(side=tk.LEFT, padx=5, expand=True, fill=tk.X)
@@ -100,35 +109,40 @@ class GerenciadorRecursos:
 
     def aplicar_tema(self):
         if self.modo_escuro:
+            # Cores do modo escuro
             bg_color = '#2d2d2d'
             fg_color = '#ffffff'
             entry_bg = '#3d3d3d'
             listbox_bg = '#3d3d3d'
             listbox_fg = '#ffffff'
             button_bg = '#4a4a4a'
-            button_fg = '#000000'
+            button_fg = '#000000'  # Fonte preta mesmo no modo escuro
             button_active_bg = '#5a5a5a'
         else:
+            # Cores do modo claro
             bg_color = '#f0f0f0'
             fg_color = '#000000'
             entry_bg = '#ffffff'
             listbox_bg = '#ffffff'
             listbox_fg = '#000000'
             button_bg = '#e0e0e0'
-            button_fg = '#000000'
+            button_fg = '#000000'  # Fonte preta
             button_active_bg = '#d0d0d0'
         
+        # Aplicar cores aos widgets
         style = ttk.Style()
         
+        # Configurar estilo para os botões ttk (mantendo fonte preta)
         style.configure('TButton',
                       background=button_bg,
-                      foreground=button_fg,
+                      foreground=button_fg,  # Sempre preto
                       bordercolor=bg_color)
         
         style.map('TButton',
                 background=[('active', button_active_bg)],
-                foreground=[('active', button_fg)])
+                foreground=[('active', button_fg)])  # Sempre preto
         
+        # Configurar outros estilos
         style.configure('TFrame', background=bg_color)
         style.configure('TLabel', background=bg_color, foreground=fg_color)
         style.configure('TEntry', 
@@ -136,12 +150,14 @@ class GerenciadorRecursos:
                       foreground=fg_color,
                       insertcolor=fg_color)
         
+        # Aplicar estilos
         self.main_frame.configure(style='TFrame')
         self.label_recurso.configure(style='TLabel')
         self.entrada_recurso.configure(style='TEntry')
         self.botao_adicionar.configure(style='TButton')
         self.botao_remover.configure(style='TButton')
         
+        # Configurar Listbox (não é ttk, precisa ser configurado separadamente)
         self.lista_recursos.config(
             bg=listbox_bg,
             fg=listbox_fg,
@@ -162,8 +178,8 @@ class GerenciadorRecursos:
             self.salvar_recursos()
         else:
             messagebox.showwarning(
-                traduzir(self.idioma, 'titulo'), 
-                traduzir(self.idioma, 'insira_recurso')
+                "Aviso", 
+                "Por favor, insira um recurso."
             )
 
     def remover_recurso(self):
@@ -174,8 +190,8 @@ class GerenciadorRecursos:
             self.salvar_recursos()
         else:
             messagebox.showwarning(
-                traduzir(self.idioma, 'titulo'), 
-                traduzir(self.idioma, 'selecione_recurso')
+                "Aviso", 
+                "Por favor, selecione um recurso para remover."
             )
 
     def atualizar_lista(self):
@@ -197,5 +213,5 @@ class GerenciadorRecursos:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = GerenciadorRecursos(root, idioma='pt')
+    app = GerenciadorRecursos(root)
     root.mainloop()
