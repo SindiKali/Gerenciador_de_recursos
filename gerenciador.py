@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 import json
 from localizacao import traduzir
 
@@ -8,25 +8,150 @@ class GerenciadorRecursos:
         self.root = root
         self.idioma = idioma
         self.recursos = []
+        self.modo_escuro = False
+        
+        self.resolucoes = {
+            '800x600': (800, 600),
+            '1024x768': (1024, 768),
+            '1280x1024': (1280, 1024),
+            '1920x1080': (1920, 1080)
+        }
+        
+        self.modo_escuro_menu_item = None
+        
+        self.configurar_interface()
+        
+        self.criar_menu()
+        
+        self.aplicar_tema()
+        
+        self.alterar_resolucao(self.resolucoes['1024x768'])
 
-        self.root.title(traduzir(self.idioma, 'titulo'))
+    def criar_menu(self):
+        menubar = tk.Menu(self.root)
+        
+        config_menu = tk.Menu(menubar, tearoff=0)
+        
+        resolucao_menu = tk.Menu(config_menu, tearoff=0)
+        for texto, resolucao in self.resolucoes.items():
+            resolucao_menu.add_command(
+                label=texto, 
+                command=lambda r=resolucao: self.alterar_resolucao(r)
+            )
+        
+        config_menu.add_cascade(label="Resolução", menu=resolucao_menu)
+        
+        self.modo_escuro_menu_item = tk.BooleanVar(value=self.modo_escuro)
+        config_menu.add_checkbutton(
+            label="Modo Escuro", 
+            variable=self.modo_escuro_menu_item,
+            command=self.alternar_modo_escuro
+        )
+        
+        config_menu.add_separator()
+        config_menu.add_command(label="Sair", command=self.root.quit)
+        
+        menubar.add_cascade(label="Configurações", menu=config_menu)
+        
+        self.root.config(menu=menubar)
 
-        self.label_recurso = tk.Label(root, text=traduzir(self.idioma, 'recurso'))
-        self.label_recurso.pack()
-
-        self.entrada_recurso = tk.Entry(root)
-        self.entrada_recurso.pack()
-
-        self.botao_adicionar = tk.Button(root, text=traduzir(self.idioma, 'adicionar'), command=self.adicionar_recurso)
-        self.botao_adicionar.pack()
-
-        self.botao_remover = tk.Button(root, text=traduzir(self.idioma, 'remover'), command=self.remover_recurso)
-        self.botao_remover.pack()
-
-        self.lista_recursos = tk.Listbox(root)
-        self.lista_recursos.pack()
-
+    def configurar_interface(self):
+        self.main_frame = ttk.Frame(self.root, padding="10")
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.label_recurso = ttk.Label(
+            self.main_frame, 
+            text=traduzir(self.idioma, 'recurso')
+        )
+        self.label_recurso.pack(pady=5)
+        
+        self.entrada_recurso = ttk.Entry(self.main_frame)
+        self.entrada_recurso.pack(fill=tk.X, pady=5)
+        
+        botoes_frame = ttk.Frame(self.main_frame)
+        botoes_frame.pack(fill=tk.X, pady=5)
+        
+        self.botao_adicionar = ttk.Button(
+            botoes_frame, 
+            text=traduzir(self.idioma, 'adicionar'), 
+            command=self.adicionar_recurso
+        )
+        self.botao_adicionar.pack(side=tk.LEFT, padx=5, expand=True, fill=tk.X)
+        
+        self.botao_remover = ttk.Button(
+            botoes_frame, 
+            text=traduzir(self.idioma, 'remover'), 
+            command=self.remover_recurso
+        )
+        self.botao_remover.pack(side=tk.LEFT, padx=5, expand=True, fill=tk.X)
+        
+        self.lista_recursos = tk.Listbox(
+            self.main_frame,
+            bg='white',
+            fg='black'
+        )
+        self.lista_recursos.pack(fill=tk.BOTH, expand=True, pady=5)
+        
         self.carregar_recursos()
+
+    def alternar_modo_escuro(self):
+        self.modo_escuro = not self.modo_escuro
+        self.aplicar_tema()
+
+    def aplicar_tema(self):
+        if self.modo_escuro:
+            bg_color = '#2d2d2d'
+            fg_color = '#ffffff'
+            entry_bg = '#3d3d3d'
+            listbox_bg = '#3d3d3d'
+            listbox_fg = '#ffffff'
+            button_bg = '#4a4a4a'
+            button_fg = '#000000'
+            button_active_bg = '#5a5a5a'
+        else:
+            bg_color = '#f0f0f0'
+            fg_color = '#000000'
+            entry_bg = '#ffffff'
+            listbox_bg = '#ffffff'
+            listbox_fg = '#000000'
+            button_bg = '#e0e0e0'
+            button_fg = '#000000'
+            button_active_bg = '#d0d0d0'
+        
+        style = ttk.Style()
+        
+        style.configure('TButton',
+                      background=button_bg,
+                      foreground=button_fg,
+                      bordercolor=bg_color)
+        
+        style.map('TButton',
+                background=[('active', button_active_bg)],
+                foreground=[('active', button_fg)])
+        
+        style.configure('TFrame', background=bg_color)
+        style.configure('TLabel', background=bg_color, foreground=fg_color)
+        style.configure('TEntry', 
+                      fieldbackground=entry_bg, 
+                      foreground=fg_color,
+                      insertcolor=fg_color)
+        
+        self.main_frame.configure(style='TFrame')
+        self.label_recurso.configure(style='TLabel')
+        self.entrada_recurso.configure(style='TEntry')
+        self.botao_adicionar.configure(style='TButton')
+        self.botao_remover.configure(style='TButton')
+        
+        self.lista_recursos.config(
+            bg=listbox_bg,
+            fg=listbox_fg,
+            selectbackground='#4a6987',
+            selectforeground='#ffffff'
+        )
+
+    def alterar_resolucao(self, resolucao):
+        largura, altura = resolucao
+        self.root.geometry(f"{largura}x{altura}")
 
     def adicionar_recurso(self):
         recurso = self.entrada_recurso.get()
@@ -36,7 +161,10 @@ class GerenciadorRecursos:
             self.entrada_recurso.delete(0, tk.END)
             self.salvar_recursos()
         else:
-            messagebox.showwarning(traduzir(self.idioma, 'titulo'), 'Por favor, insira um recurso.')
+            messagebox.showwarning(
+                traduzir(self.idioma, 'titulo'), 
+                traduzir(self.idioma, 'insira_recurso')
+            )
 
     def remover_recurso(self):
         selecionado = self.lista_recursos.curselection()
@@ -45,7 +173,10 @@ class GerenciadorRecursos:
             self.atualizar_lista()
             self.salvar_recursos()
         else:
-            messagebox.showwarning(traduzir(self.idioma, 'titulo'), 'Por favor, selecione um recurso para remover.')
+            messagebox.showwarning(
+                traduzir(self.idioma, 'titulo'), 
+                traduzir(self.idioma, 'selecione_recurso')
+            )
 
     def atualizar_lista(self):
         self.lista_recursos.delete(0, tk.END)
